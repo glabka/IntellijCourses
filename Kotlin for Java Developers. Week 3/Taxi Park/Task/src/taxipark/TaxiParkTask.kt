@@ -6,8 +6,7 @@ import kotlin.math.floor
  * Task #1. Find all the drivers who performed no trips.
  */
 fun TaxiPark.findFakeDrivers(): Set<Driver> =
-        allDrivers.filter { driver -> trips.none { trip -> trip.driver == driver } }.toSet()
-
+    allDrivers - trips.map { it.driver } // all drivers without drivers that has been in trip
 /*
  * Task #2. Find all the clients who completed at least the given number of trips.
  */
@@ -19,51 +18,51 @@ fun TaxiPark.findFaithfulPassengers(minTrips: Int): Set<Passenger> =
  * Task #3. Find all the passengers, who were taken by a given driver more than once.
  */
 fun TaxiPark.findFrequentPassengers(driver: Driver): Set<Passenger> =
-    allPassengers.filter { passenger -> trips.filter {
-            trip -> trip.passengers.contains(passenger) && trip.driver == driver }.size > 1 }.toSet()
+    allPassengers.filter { passenger -> trips.count {
+            // in is equivalent to contains() method
+            trip -> passenger in trip.passengers && trip.driver == driver } > 1 }.toSet()
 /*
  * Task #4. Find the passengers who had a discount for majority of their trips.
  */
-fun TaxiPark.findSmartPassengers(): Set<Passenger> =
-    allPassengers.filter { passenger ->
-        val (disTrips, nonDistTrips) = trips.filter { trip -> trip.passengers.contains(passenger) }
-        .partition { trip -> trip.discount ?: 0.0 > 0.0 }
-        disTrips.size > nonDistTrips.size
+fun TaxiPark.findSmartPassengers(): Set<Passenger> {
+    val (disTrips, nonDistTrips) = trips.partition { it.discount != null }
+    return allPassengers.filter { passenger ->
+        disTrips.count { passenger in it.passengers} >
+        nonDistTrips.count { passenger in it.passengers}
     }.toSet()
+}
 /*
  * Task #5. Find the most frequent trip duration among minute periods 0..9, 10..19, 20..29, and so on.
  * Return any period if many are the most frequent, return `null` if there're no trips.
  */
 fun TaxiPark.findTheMostFrequentTripDurationPeriod(): IntRange? {
-    if (trips == null || trips.isEmpty()) return null
-    return allRanges().filterNotNull().maxBy { range ->
-        trips.count {trip -> trip.duration in range} }
+    return trips
+        .groupBy {
+            val start = it.duration / 10 * 10
+            val end = start + 9
+            start..end
+        }
+        .maxBy { (_, group) -> group.size }
+        ?.key
 }
 
-fun TaxiPark.allRanges(): MutableList<IntRange?> {
-    fun Int.toDecimal() : Int {
-        return this + (10 - (this % 10))
-    }
-    val maxRange = trips.maxBy { it.duration }?.duration?.toDecimal() ?: 0
-    val ranges: MutableList<IntRange?> = mutableListOf()
-    for (rangeStart in 0..maxRange step 10) {
-        ranges.add(rangeStart until rangeStart + 10)
-    }
-    return ranges
-}
 /*
  * Task #6.
  * Check whether 20% of the drivers contribute 80% of the income.
  */
 fun TaxiPark.checkParetoPrinciple(): Boolean {
-    if (trips == null || trips.isEmpty()) return false
-    val numOfTopDrivers = floor(allDrivers.size * 0.2)
-    val sortedDriversAndCosts = allDrivers.associateWith { driver -> trips.filter {trip -> trip.driver == driver}
-        .sumByDouble { trip -> trip.cost }}.toList().sortedBy { (_, costs) -> costs }
-    val (restOfDrivers, topDrivers) = sortedDriversAndCosts.withIndex().partition { (index, _) -> index < allDrivers.size - numOfTopDrivers }
-    println(restOfDrivers)
-    println(topDrivers)
-    val allCosts = sortedDriversAndCosts.sumByDouble { (_, costs) -> costs }
-    return topDrivers.sumByDouble { indexedValue -> indexedValue.value.second} >= allCosts * 0.8
+    if (trips.isEmpty()) return false
 
+    val totalIncome = trips.sumByDouble { it.cost }
+    val sortedDriversIncome: List<Double> = trips
+        .groupBy { Trip::driver } // it should be same as it.driver
+        .map { (_, tripsByDriver) -> tripsByDriver.sumByDouble { trip -> trip.cost} }
+        .sortedDescending()
+
+    val numberOfTopDrivers = (0.2 * allDrivers.size).toInt()
+    val incomeByTopDrivers = sortedDriversIncome
+        .take(numberOfTopDrivers)
+        .sum()
+
+    return incomeByTopDrivers >= 0.8 * totalIncome
 }
