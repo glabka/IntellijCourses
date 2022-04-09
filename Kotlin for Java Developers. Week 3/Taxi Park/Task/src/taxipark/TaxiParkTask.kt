@@ -55,7 +55,7 @@ fun TaxiPark.checkParetoPrinciple(): Boolean {
 
     val totalIncome = trips.sumByDouble { it.cost }
     val sortedDriversIncome: List<Double> = trips
-        .groupBy { Trip::driver } // it should be same as it.driver
+        .groupBy( Trip::driver ) // it should be same as { it.driver } - note it is not in curly brackets
         .map { (_, tripsByDriver) -> tripsByDriver.sumByDouble { trip -> trip.cost} }
         .sortedDescending()
 
