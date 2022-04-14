@@ -17,9 +17,15 @@ class Rational(numerator: BigInteger, denominator: BigInteger) {
         val numNegative = numerator.compareTo(BigInteger.ZERO) < 0
         val denomNegative = denominator.compareTo(BigInteger.ZERO) < 0
 
+        this.numerator = numerator
+        this.denominator = denominator
+
+//        println("numNegative: $numNegative")
+//        println("denomNegative: $denomNegative")
+
         if (numNegative && denomNegative) {
-            this.numerator = numerator.abs()
-            this.denominator = denominator.abs()
+            this.numerator = this.numerator.abs()
+            this.denominator = this.denominator.abs()
         } else if (denomNegative) {
             this.numerator = this.numerator.negate()
             this.denominator = this.denominator.negate()
@@ -27,9 +33,13 @@ class Rational(numerator: BigInteger, denominator: BigInteger) {
 
         // dividing by greatest common divisor
         val gcd = numerator.gcd(denominator)
-        println("gcd: $gcd")
+//        println("gcd: $gcd")
+//        println("this.numerator before gcd ${this.numerator}")
+//        println("this.denominator before gcd ${this.denominator}")
         this.numerator = this.numerator / gcd
         this.denominator = this.denominator / gcd
+//        println("this.numerator ${this.numerator}")
+//        println("this.denominator ${this.denominator}")
     }
 
     constructor(numerator: Int, denominator: Int): this(numerator.toBigInteger(), denominator.toBigInteger())
@@ -102,10 +112,10 @@ data class RationalNumberRange(val fromNum: Rational, val toNum: Rational) {
 
 fun String.toRational(): Rational {
     val splittedStr = this.split("""/""")
-    if (splittedStr.size != 2) throw IllegalArgumentException("Not in the rational number format: " + this)
+    if (splittedStr.size != 2 && splittedStr.size != 1) throw IllegalArgumentException("Not in the rational number format: " + this)
 
     val numerator = splittedStr[0].toBigInteger()
-    val denominator = splittedStr[1].toBigInteger()
+    val denominator = if (splittedStr.size == 1) BigInteger.ONE else splittedStr[1].toBigInteger()
 
     return Rational(numerator, denominator)
 }
