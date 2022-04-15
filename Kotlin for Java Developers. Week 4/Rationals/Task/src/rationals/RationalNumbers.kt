@@ -3,12 +3,7 @@ package rationals
 import org.w3c.dom.ranges.Range
 import java.math.BigInteger
 
-class Rational(numerator: BigInteger, denominator: BigInteger) {
-    var numerator: BigInteger = BigInteger.ONE
-        private set
-
-    var denominator: BigInteger = BigInteger.ONE
-        private set
+data class Rational(private var numerator: BigInteger, private var denominator: BigInteger) {
 
     init {
         if (denominator == BigInteger.ZERO) throw IllegalArgumentException()
@@ -17,29 +12,18 @@ class Rational(numerator: BigInteger, denominator: BigInteger) {
         val numNegative = numerator.compareTo(BigInteger.ZERO) < 0
         val denomNegative = denominator.compareTo(BigInteger.ZERO) < 0
 
-        this.numerator = numerator
-        this.denominator = denominator
-
-//        println("numNegative: $numNegative")
-//        println("denomNegative: $denomNegative")
-
         if (numNegative && denomNegative) {
-            this.numerator = this.numerator.abs()
-            this.denominator = this.denominator.abs()
+            numerator = numerator.abs()
+            denominator = denominator.abs()
         } else if (denomNegative) {
-            this.numerator = this.numerator.negate()
-            this.denominator = this.denominator.negate()
+            numerator = numerator.negate()
+            denominator = denominator.negate()
         }
 
         // dividing by greatest common divisor
         val gcd = numerator.gcd(denominator)
-//        println("gcd: $gcd")
-//        println("this.numerator before gcd ${this.numerator}")
-//        println("this.denominator before gcd ${this.denominator}")
-        this.numerator = this.numerator / gcd
-        this.denominator = this.denominator / gcd
-//        println("this.numerator ${this.numerator}")
-//        println("this.denominator ${this.denominator}")
+        this.numerator = numerator / gcd
+        this.denominator = denominator / gcd
     }
 
     constructor(numerator: Int, denominator: Int): this(numerator.toBigInteger(), denominator.toBigInteger())
@@ -86,26 +70,9 @@ class Rational(numerator: BigInteger, denominator: BigInteger) {
             return numerator.toString() + "/" + denominator.toString()
 
     }
-    
-    override fun equals(other: Any?): Boolean {
-        if (other !is Rational) return false
-        if (this === other) return false
-        if (this.numerator != other.numerator) return false
-        if (this.denominator != other.denominator) return false
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return numerator.hashCode() + denominator.hashCode()
-    }
 }
 
 data class RationalNumberRange(val fromNum: Rational, val toNum: Rational) {
-//    init {
-//        if (fromNum.denominator != toNum.denominator) throw IllegalArgumentException("Denominator of rational numbers" +
-//                fromNum.toString() + " and " + toNum.toString() + " are different.")
-//    }
-
     operator fun contains(rational: Rational): Boolean
     = rational >= fromNum && rational <= toNum
 }
